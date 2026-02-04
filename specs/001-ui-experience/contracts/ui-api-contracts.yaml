@@ -1,0 +1,434 @@
+openapi: 3.0.3
+info:
+  title: Frontend UI API Contracts
+  description: API contracts for the Todo web interface
+  version: 1.0.0
+
+servers:
+  - url: https://api.todoapp.example.com/v1
+    description: Production server
+  - url: https://staging-api.todoapp.example.com/v1
+    description: Staging server
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      description: Creates a new user account and returns JWT token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid input or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      summary: Login user
+      description: Authenticates user and returns JWT token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      summary: Logout user
+      description: Logs out the current user and invalidates session
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+        '401':
+          description: Unauthorized - invalid or expired token
+
+  /tasks:
+    get:
+      summary: Get user's tasks
+      description: Retrieves all tasks belonging to the authenticated user
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of user's tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskResponse'
+        '401':
+          description: Unauthorized - invalid or expired token
+        '403':
+          description: Forbidden - user not authorized
+
+    post:
+      summary: Create a new task
+      description: Creates a new task for the authenticated user
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid or expired token
+        '403':
+          description: Forbidden - user not authorized
+
+  /tasks/{taskId}:
+    get:
+      summary: Get a specific task
+      description: Retrieve a specific task by ID
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The task ID
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '401':
+          description: Unauthorized - invalid or expired token
+        '403':
+          description: Forbidden - user not authorized
+        '404':
+          description: Task not found
+
+    put:
+      summary: Update a task
+      description: Updates an existing task for the authenticated user
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The task ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid or expired token
+        '403':
+          description: Forbidden - user not authorized
+        '404':
+          description: Task not found
+
+    delete:
+      summary: Delete a task
+      description: Deletes a task owned by the authenticated user
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The task ID
+      responses:
+        '204':
+          description: Task deleted successfully
+        '401':
+          description: Unauthorized - invalid or expired token
+        '403':
+          description: Forbidden - user not authorized
+        '404':
+          description: Task not found
+
+  /auth/verify:
+    post:
+      summary: Verify JWT token
+      description: Verifies if the provided JWT token is valid
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenVerificationResponse'
+        '401':
+          description: Invalid or expired token
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserRegistration:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: User's password
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: User's first name (optional)
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: User's last name (optional)
+
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+        password:
+          type: string
+          format: password
+          description: User's password
+
+    TaskCreate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Task title
+        description:
+          type: string
+          maxLength: 1000
+          description: Task description (optional)
+        priority:
+          type: string
+          enum: [low, medium, high]
+          default: medium
+          description: Task priority level
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Task title
+        description:
+          type: string
+          maxLength: 1000
+          description: Task description
+        completed:
+          type: boolean
+          description: Whether task is completed
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: Task priority level
+
+    TaskResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique task identifier
+        title:
+          type: string
+          description: Task title
+        description:
+          type: string
+          description: Task description
+        completed:
+          type: boolean
+          description: Whether task is completed
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: Task priority level
+        ownerId:
+          type: string
+          format: uuid
+          description: ID of the user who owns this task
+        createdAt:
+          type: string
+          format: date-time
+          description: Task creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last task update timestamp
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: JWT access token
+        token_type:
+          type: string
+          default: bearer
+          description: Type of token (typically "bearer")
+        user:
+          $ref: '#/components/schemas/UserResponse'
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+        email:
+          type: string
+          format: email
+          description: User's email address
+        firstName:
+          type: string
+          description: User's first name (optional)
+        lastName:
+          type: string
+          description: User's last name (optional)
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last account update timestamp
+        isActive:
+          type: boolean
+          description: Whether account is active
+
+    TokenVerificationResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+          description: Whether the token is valid
+        user:
+          $ref: '#/components/schemas/UserResponse'
+        expiresIn:
+          type: integer
+          description: Number of seconds until token expiration
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code (optional)
+        details:
+          type: object
+          description: Additional error details (optional)
