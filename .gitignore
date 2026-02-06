@@ -1,0 +1,81 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+
+# Environment variables (IMPORTANT: Do not commit these!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env
+frontend/.env.local
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# Temporary folders
+tmp/
+temp/
+
+# Production builds
+/build/
+/dist/
+/out/
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Backend specific
+backend/__pycache__/
+backend/*.pyc
+backend/*.pyo
+
+# Database
+*.db
+*.db-journal
+
+# Secrets
+secrets/
+secret/
+*.key
+*.pem
+*.crt
+*.cert
+
+# Sensitive files
+config.json
+credentials.json
