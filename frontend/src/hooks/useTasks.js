@@ -140,83 +140,62 @@ const useTasks = () => {
     setLoading(true);
     setError(null);
 
-    // Retry mechanism for Hugging Face Spaces cold starts
-    const maxRetries = 3;
-    let retries = 0;
+    try {
+      console.log(`Creating task...`);
+      const response = await apiClient.post('/tasks/', taskData);
+      const newTask = response.data;
 
-    while (retries < maxRetries) {
-      try {
-        console.log(`Creating task (attempt ${retries + 1}/${maxRetries})...`);
-        const response = await apiClient.post('/tasks/', taskData);
-        const newTask = response.data;
-
-        // Update the UI with the new task, ensuring no duplicates
+      // Update the UI with the new task, ensuring no duplicates
       setTasks(prev => {
-  const safePrev = Array.isArray(prev) ? prev : [];
+        const safePrev = Array.isArray(prev) ? prev : [];
 
-  // Agar backend se proper task nahi aaya to crash mat karo
-  if (!newTask || !newTask.id) {
-    console.error("Invalid newTask received:", newTask);
-    return safePrev;
-  }
-
-  const filteredTasks = safePrev.filter(
-    task => task && task.id !== newTask.id
-  );
-
-  return [...filteredTasks, newTask];
-});
-
-        return newTask;
-      } catch (err) {
-        console.error(`Error creating task (attempt ${retries + 1}):`, err);
-
-        // Check if this is a network error that might benefit from retry
-        const isRetryableError = err.code === 'ERR_NETWORK' ||
-                                err.code === 'ECONNABORTED' ||
-                                err.message.includes('timeout') ||
-                                err.response?.status === 0 ||
-                                err.response?.status >= 500;
-
-        if (isRetryableError && retries < maxRetries - 1) {
-          // Wait before retrying (exponential backoff)
-          const delay = Math.pow(2, retries) * 1000; // 1s, 2s, 4s
-          console.log(`Retrying in ${delay}ms due to network error...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          retries++;
-        } else {
-          // Provide more specific error messages
-          let errorMessage = 'Failed to create task';
-          if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
-            errorMessage = 'Network error. This is often due to Hugging Face Spaces cold starts. The backend may be waking up. Please wait a moment and try again.';
-          } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-            errorMessage = 'Request timed out. This is common with Hugging Face Spaces due to cold starts. The backend may be waking up. Please wait a moment and try again.';
-          } else if (err.response?.status === 0) {
-            errorMessage = 'Unable to connect to the server. This is often due to Hugging Face Spaces cold starts. The backend may be waking up. Please wait a moment and try again.';
-          } else if (err.response?.status >= 500) {
-            errorMessage = 'Server error. This may be due to Hugging Face Spaces cold starts. Please try again in a moment.';
-          } else if (err.response?.status === 401) {
-            errorMessage = 'Unauthorized. Please log in again.';
-            // Optionally redirect to login
-            if (typeof window !== 'undefined') {
-              window.location.href = '/login';
-            }
-          } else if (err.response?.status === 403) {
-            errorMessage = 'Access denied. Please contact support.';
-          } else if (err.response?.status === 404) {
-            errorMessage = 'Server endpoint not found. Please check if the backend is running properly.';
-          } else if (err.message) {
-            errorMessage = err.message;
-          }
-
-          setError(errorMessage);
-          throw new Error(errorMessage);
+        // Agar backend se proper task nahi aaya to crash mat karo
+        if (!newTask || !newTask.id) {
+          console.error("Invalid newTask received:", newTask);
+          return safePrev;
         }
-      }
-    }
 
-    // This line should not be reached, but included for completeness
-    setLoading(false);
+        const filteredTasks = safePrev.filter(
+          task => task && task.id !== newTask.id
+        );
+
+        return [...filteredTasks, newTask];
+      });
+
+      return newTask;
+    } catch (err) {
+      console.error(`Error creating task:`, err);
+
+      // Provide more specific error messages
+      let errorMessage = 'Failed to create task';
+      if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
+        errorMessage = 'Network error. This is often due to Hugging Face Spaces cold starts. The backend may be waking up. Please wait a moment and try again.';
+      } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        errorMessage = 'Request timed out. This is common with Hugging Face Spaces due to cold starts. The backend may be waking up. Please wait a moment and try again.';
+      } else if (err.response?.status === 0) {
+        errorMessage = 'Unable to connect to the server. This is often due to Hugging Face Spaces cold starts. The backend may be waking up. Please wait a moment and try again.';
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Server error. This may be due to Hugging Face Spaces cold starts. Please try again in a moment.';
+      } else if (err.response?.status === 401) {
+        errorMessage = 'Unauthorized. Please log in again.';
+        // Optionally redirect to login
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+      } else if (err.response?.status === 403) {
+        errorMessage = 'Access denied. Please contact support.';
+      } else if (err.response?.status === 404) {
+        errorMessage = 'Server endpoint not found. Please check if the backend is running properly.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      // Always set loading to false to prevent stuck loading state
+      setLoading(false);
+    }
   };
 
   // Update an existing task
@@ -224,73 +203,52 @@ const useTasks = () => {
     setLoading(true);
     setError(null);
 
-    // Retry mechanism for Hugging Face Spaces cold starts
-    const maxRetries = 3;
-    let retries = 0;
+    try {
+      console.log(`Updating task ${taskId}...`);
+      const response = await apiClient.put(`/tasks/${taskId}`, taskData);
+      const updatedTask = response.data;
 
-    while (retries < maxRetries) {
-      try {
-        console.log(`Updating task ${taskId} (attempt ${retries + 1}/${maxRetries})...`);
-        const response = await apiClient.put(`/tasks/${taskId}`, taskData);
-        const updatedTask = response.data;
+      // Update the task in the UI, ensuring no duplicates
+      setTasks(prev => {
+        // Filter out the old task with the same ID and add the updated one
+        const filteredTasks = prev.filter(task => task.id !== taskId);
+        return [...filteredTasks, updatedTask];
+      });
 
-        // Update the task in the UI, ensuring no duplicates
-        setTasks(prev => {
-          // Filter out the old task with the same ID and add the updated one
-          const filteredTasks = prev.filter(task => task.id !== taskId);
-          return [...filteredTasks, updatedTask];
-        });
+      return updatedTask;
+    } catch (err) {
+      console.error(`Error updating task ${taskId}:`, err);
 
-        return updatedTask;
-      } catch (err) {
-        console.error(`Error updating task ${taskId} (attempt ${retries + 1}):`, err);
-
-        // Check if this is a network error that might benefit from retry
-        const isRetryableError = err.code === 'ERR_NETWORK' ||
-                                err.code === 'ECONNABORTED' ||
-                                err.message.includes('timeout') ||
-                                err.response?.status === 0 ||
-                                err.response?.status >= 500;
-
-        if (isRetryableError && retries < maxRetries - 1) {
-          // Wait before retrying (exponential backoff)
-          const delay = Math.pow(2, retries) * 1000; // 1s, 2s, 4s
-          console.log(`Retrying in ${delay}ms due to network error...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          retries++;
-        } else {
-          // Provide more specific error messages
-          let errorMessage = 'Failed to update task';
-          if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
-            errorMessage = 'Network error. This is often due to Hugging Face Spaces cold starts. The backend may be waking up. Please wait a moment and try again.';
-          } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-            errorMessage = 'Request timed out. This is common with Hugging Face Spaces due to cold starts. The backend may be waking up. Please wait a moment and try again.';
-          } else if (err.response?.status === 0) {
-            errorMessage = 'Unable to connect to the server. This is often due to Hugging Face Spaces cold starts. The backend may be waking up. Please wait a moment and try again.';
-          } else if (err.response?.status >= 500) {
-            errorMessage = 'Server error. This may be due to Hugging Face Spaces cold starts. Please try again in a moment.';
-          } else if (err.response?.status === 401) {
-            errorMessage = 'Unauthorized. Please log in again.';
-            // Optionally redirect to login
-            if (typeof window !== 'undefined') {
-              window.location.href = '/login';
-            }
-          } else if (err.response?.status === 403) {
-            errorMessage = 'Access denied. Please contact support.';
-          } else if (err.response?.status === 404) {
-            errorMessage = 'Server endpoint not found. Please check if the backend is running properly.';
-          } else if (err.message) {
-            errorMessage = err.message;
-          }
-
-          setError(errorMessage);
-          throw new Error(errorMessage);
+      // Provide more specific error messages
+      let errorMessage = 'Failed to update task';
+      if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
+        errorMessage = 'Network error. This is often due to Hugging Face Spaces cold starts. The backend may be waking up. Please wait a moment and try again.';
+      } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        errorMessage = 'Request timed out. This is common with Hugging Face Spaces due to cold starts. The backend may be waking up. Please wait a moment and try again.';
+      } else if (err.response?.status === 0) {
+        errorMessage = 'Unable to connect to the server. This is often due to Hugging Face Spaces cold starts. The backend may be waking up. Please wait a moment and try again.';
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Server error. This may be due to Hugging Face Spaces cold starts. Please try again in a moment.';
+      } else if (err.response?.status === 401) {
+        errorMessage = 'Unauthorized. Please log in again.';
+        // Optionally redirect to login
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
         }
+      } else if (err.response?.status === 403) {
+        errorMessage = 'Access denied. Please contact support.';
+      } else if (err.response?.status === 404) {
+        errorMessage = 'Server endpoint not found. Please check if the backend is running properly.';
+      } else if (err.message) {
+        errorMessage = err.message;
       }
-    }
 
-    // This line should not be reached, but included for completeness
-    setLoading(false);
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      // Always set loading to false to prevent stuck loading state
+      setLoading(false);
+    }
   };
 
   // Delete a task
