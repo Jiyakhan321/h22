@@ -18,6 +18,7 @@ load_dotenv()
 
 from src.api.auth_router import auth_router
 from src.api.task_router import task_router
+from src.api.chat_router import chat_router
 from src.database import create_tables
 
 @asynccontextmanager
@@ -44,7 +45,7 @@ async def lifespan(app: FastAPI):
                 wait_time = 2 ** attempt  # Exponential backoff
                 logger.info(f"Waiting {wait_time}s before next attempt...")
                 await asyncio.sleep(wait_time)
-                
+    
     except Exception as e:
         logger.error(f"Database connection error: {str(e)}")
         raise
@@ -66,7 +67,8 @@ logger.info("FastAPI app initialized")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000","https://h22-nlqwdpwgq-jaweria.vercel.app"
+        "http://localhost:3000",
+        "https://h22-nlqwdpwgq-jaweria.vercel.app",
         "*",  # Allow all origins for Hugging Face Spaces deployment
     ],
     allow_credentials=True,
@@ -79,9 +81,11 @@ logger.info("CORS middleware configured")
 # Include routers
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 app.include_router(task_router, prefix="/tasks", tags=["Tasks"])
+app.include_router(chat_router, tags=["Chat"])
 
 logger.info("Auth router mounted")
 logger.info("Task router mounted")
+logger.info("Chat router mounted")
 
 @app.get("/")
 def read_root():

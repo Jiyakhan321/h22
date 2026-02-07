@@ -1,0 +1,52 @@
+# API Contract: Chat Endpoint
+
+## Endpoint: POST /api/{user_id}/chat
+
+### Description
+Handles chat messages from users and returns responses from the AI agent. Supports both starting new conversations and continuing existing ones.
+
+### Path Parameters
+- **user_id** (string, required): The authenticated user's ID, must match the user ID in the JWT token
+
+### Request Body
+```json
+{
+  "message": "Hello, how can you help me with my todos?",
+  "conversation_id": "optional-conversation-id-if-resuming",
+  "timestamp": "2026-02-07T10:00:00Z"
+}
+```
+
+### Request Headers
+- **Authorization**: Bearer {jwt_token}
+
+### Response Success (200)
+```json
+{
+  "conversation_id": "unique-conversation-id",
+  "response": "I can help you manage your todos...",
+  "message_id": "unique-message-id-for-response",
+  "timestamp": "2026-02-07T10:00:05Z"
+}
+```
+
+### Response Errors
+- **401 Unauthorized**: Invalid or missing JWT token
+- **403 Forbidden**: User ID in JWT doesn't match user_id in path (cross-user access attempt)
+- **422 Unprocessable Entity**: Invalid request body format
+- **500 Internal Server Error**: Agent service unavailable or database error
+
+### Business Logic
+1. Verify JWT token and ensure user_id matches authenticated user
+2. If conversation_id provided, validate it belongs to the user
+3. If no conversation_id, create new conversation
+4. Store user message in database
+5. Retrieve conversation history for agent context
+6. Invoke agent service with conversation context
+7. Store agent response in database
+8. Return agent response to client
+
+### Constraints
+- Stateless operation: No server-side session storage between requests
+- User isolation: Users can only access their own conversations
+- Message ordering: Messages stored with sequence numbers for proper chronology

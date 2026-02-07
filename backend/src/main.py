@@ -14,6 +14,7 @@ load_dotenv()
 
 from src.api.auth_router import auth_router
 from src.api.task_router import task_router
+from src.api.chat_router import chat_router
 from src.database import create_tables
 
 # Get frontend and backend URLs from environment variables
@@ -65,9 +66,11 @@ logger.info("CORS middleware configured")
 # Include routers
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 app.include_router(task_router, prefix="/tasks", tags=["Tasks"])
+app.include_router(chat_router, tags=["Chat"])
 
 logger.info("Auth router mounted")
 logger.info("Task router mounted")
+logger.info("Chat router mounted")
 
 @app.get("/")
 def read_root():

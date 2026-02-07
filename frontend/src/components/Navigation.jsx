@@ -47,6 +47,16 @@ const Navigation = () => {
                   <span>Dashboard</span>
                 </Link>
 
+                <Link
+                  href="/chat"
+                  className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-red-accent dark:hover:text-red-accent transition-colors duration-200 font-medium"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  <span>Chat</span>
+                </Link>
+
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-3 bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-full">
                     <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -137,6 +147,17 @@ const Navigation = () => {
                   >
                     <LayoutDashboard className="w-5 h-5" />
                     <span className="font-medium">Dashboard</span>
+                  </Link>
+
+                  <Link
+                    href="/chat"
+                    className="flex items-center space-x-3 text-gray-700 dark:text-gray-300 hover:text-red-accent dark:hover:text-red-accent transition-colors duration-200 py-3 px-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <span className="font-medium">Chat</span>
                   </Link>
 
                   <div className="flex items-center justify-between px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-lg mx-2">

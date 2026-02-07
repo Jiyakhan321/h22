@@ -22,7 +22,7 @@ const TaskList = ({ tasks, onTaskUpdate, onTaskDelete, onToggleTaskCompletion })
           onTaskDelete={onTaskDelete}
           onToggleTaskCompletion={onToggleTaskCompletion}
         />
-      ))}~
+      ))}
     </div>
   );
 };

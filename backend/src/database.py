@@ -60,6 +60,8 @@ def create_tables():
     from sqlmodel import SQLModel
     from .models.user import User
     from .models.todo_task import TodoTask
+    from .models.conversation_model import Conversation
+    from .models.message_model import Message
 
     try:
         logger.info("Attempting to create database tables...")
